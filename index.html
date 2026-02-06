@@ -1,0 +1,154 @@
+<!DOCTYPE html>
+<html lang="bn">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Pro Binary Translator</title>
+<style>
+body {
+  font-family: 'Arial', sans-serif;
+  background: #fff9c4;
+  padding: 20px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  min-height: 100vh;
+}
+h2 { color: #f57f17; text-align:center; }
+select, textarea, button {
+  width: 100%; max-width: 500px; margin-top: 10px;
+  font-size: 18px; padding: 12px; border-radius: 8px;
+  border: 2px solid #ccc; box-sizing: border-box;
+}
+button { cursor: pointer; border: none; color: white; background-color: #f57f17; transition: 0.3s; font-weight: bold; }
+button:hover { background-color: #ef6c00; }
+
+/* ক্লিয়ার বাটন - লাল রঙের */
+.clear-btn { background-color: #d32f2f; margin-top: 5px; width: auto; align-self: flex-start; padding: 8px 18px; font-size: 16px; border-radius: 5px; }
+.clear-btn:hover { background-color: #b71c1c; }
+
+.input-container { width: 100%; max-width: 500px; display: flex; flex-direction: column; }
+
+pre {
+  width: 100%; max-width: 500px; min-height: 60px;
+  background: #ffffff; padding: 10px; margin-top: 15px;
+  border-radius: 8px; border: 2px solid #f57f17;
+  overflow-x: auto; white-space: pre-wrap; word-wrap: break-word;
+}
+
+/* আলাদা কপি বাটনের রঙ */
+.copy-input { background-color: #5d4037; }
+.copy-result { background-color: #2e7d32; }
+.speak-btn { background-color: #0277bd; }
+</style>
+</head>
+<body>
+
+<h2>Binary Translator Pro 🟢</h2>
+
+<select id="mode">
+  <option value="text2bin">Language → Binary</option>
+  <option value="bin2text">Binary → Language</option>
+</select>
+
+<div class="input-container">
+  <textarea id="inputText" placeholder="এখানে লিখুন..."></textarea>
+  <button class="clear-btn" onclick="clearAll()">× Clear</button>
+</div>
+
+<button class="copy-input" onclick="copyText('inputText')">Copy My Text 📋</button>
+
+<button onclick="translateText()">Translate 🔄</button>
+<button class="speak-btn" onclick="speakText()">Read Aloud 🔊</button>
+
+<pre id="outputText"></pre>
+
+<button class="copy-result" onclick="copyText('outputText')">Copy Translated Result 📋</button>
+
+<script>
+const input = document.getElementById('inputText');
+const output = document.getElementById('outputText');
+const modeSelect = document.getElementById('mode');
+
+function translateText() {
+  const mode = modeSelect.value;
+  let text = input.value.trim();
+  if(!text) { output.textContent = "কিছু লিখো আগে!"; return; }
+
+  if(mode === 'text2bin'){
+    let binary = '';
+    for(let char of text) {
+      binary += char.codePointAt(0).toString(2).padStart(16,'0') + ' ';
+    }
+    output.textContent = binary.trim();
+  } else {
+    const bins = text.split(/\s+/);
+    let result = '';
+    try {
+      for(let b of bins){
+        if(!b) continue;
+        result += String.fromCodePoint(parseInt(b, 2));
+      }
+      output.textContent = result;
+    } catch(e) { output.textContent = "ভুল বাইনারি!"; }
+  }
+}
+
+function clearAll() {
+  input.value = "";
+  output.textContent = "";
+}
+
+// ১০০% কার্যকরী কপি ফাংশন (আলাদা আলাদা বাটন এর জন্য)
+function copyText(elementId) {
+  const element = document.getElementById(elementId);
+  let textToCopy = (elementId === 'inputText') ? element.value : element.innerText;
+
+  if(!textToCopy || textToCopy === "কিছু লিখো আগে!" || textToCopy === "ভুল বাইনারি!") {
+    alert("কপি করার মতো কিছু নেই!");
+    return;
+  }
+
+  const textArea = document.createElement("textarea");
+  textArea.value = textToCopy;
+  textArea.style.position = "fixed";
+  textArea.style.left = "-9999px";
+  document.body.appendChild(textArea);
+  
+  textArea.focus();
+  textArea.select();
+  textArea.setSelectionRange(0, 99999);
+
+  try {
+    const successful = document.execCommand('copy');
+    if(successful) {
+      alert("কপি হয়েছে! ✅");
+    } else {
+      alert("কপি ব্যর্থ হয়েছে! ❌");
+    }
+  } catch (err) {
+    alert("কপি করা সম্ভব হয়নি।");
+  }
+
+  document.body.removeChild(textArea);
+}
+
+function speakText() {
+  const text = input.value.trim();
+  if(!text) return alert("পড়ার জন্য কিছু লিখো!");
+  
+  window.speechSynthesis.cancel();
+  const utterance = new SpeechSynthesisUtterance(text);
+  
+  if(/[\u0980-\u09FF]/.test(text)) {
+    utterance.lang = 'bn-BD';
+  } else {
+    utterance.lang = 'en-US';
+  }
+  
+  window.speechSynthesis.speak(utterance);
+}
+</script>
+
+</body>
+</html>
